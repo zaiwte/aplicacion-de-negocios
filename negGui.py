@@ -6,6 +6,7 @@ import PySimpleGUI as sg
 
 class NegGui:
     def __init__(self):
+        self.h="hola"
         self.motor=negClass.NegMotor()
         self.motor.crear_tablas_sql()
         self.ventanaMensaje=negClass.Ventana_mensaje()
