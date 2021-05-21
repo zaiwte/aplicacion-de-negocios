@@ -6,7 +6,6 @@ import PySimpleGUI as sg
 
 class NegGui:
     def __init__(self):
-        self.h="hola"
         self.motor=negClass.NegMotor()
         self.motor.crear_tablas_sql()
         self.ventanaMensaje=negClass.Ventana_mensaje()
@@ -14,6 +13,7 @@ class NegGui:
         self.ventanaBuscar =negClass.Ventana_busqueda()
         self.ventanaDolar  =negClass.Ventana_dolar()
         self.ventanaRegistro=negClass.Ventana_registro()
+        self.ventas =negClass.Ventas()
 
     def tab_inicio(self):
         #sg.Text('Bs',font='14'),sg.Radio('','P',k='-RB1_INI-')
@@ -111,7 +111,6 @@ class NegGui:
                 "ey":['-LISTA_INI-',
                       '-TABLA_INI-']}
 
-
     def tab_inventario(self):
 
         F_1=[[sg.Table(headings=[i for i in ['NOMBRE','CANTIDAD','TOTAL']],
@@ -202,10 +201,8 @@ class NegGui:
                       '-busqueda_c-'],
                 "ey":['-TABLA_C-']}
 
-
     def tab_ventas(self):
         arbol=sg.TreeData()
-
         def datos():
             arbol.insert(parent='',key='kp',text="19/02/21",values=["lunes"],icon=None)
             arbol.insert(parent='kp',key='kh',text="11:03-am",values=[1],icon=None)
@@ -214,10 +211,7 @@ class NegGui:
             arbol.insert(parent='',key='kp3',text="22/02/21",values=["lunes"],icon=None)
             arbol.insert(parent='',key='kp4',text="23/02/21",values=["lunes"],icon=None)
             arbol.insert(parent='',key='kp5',text="24/02/21",values=["lunes"],icon=None)
-
-
         datos()
-
         F_1=[[sg.Tree(data=arbol,
                       headings=[],
                       auto_size_columns = False,
@@ -227,7 +221,6 @@ class NegGui:
              [sg.Button('CREAR',size=(15,0),k='-CREAR_V-')],
              [sg.Button('SELECCIONAR',size=(15,0),k='-SELECCIONAR_V-')],
              [sg.Button('ELIMINAR',size=(15,0),k='-ELIMINAR_V-')]]
-
 
         F_2=[[sg.Table(headings=[i for i in ['PRODUCTO','P. AL MAYOR','P. AL DETAL','CANTIDAD','TOTAL BS','TOTAL $','ETIQUETA']],
                                values=[[i for i in ['','','','','','','']] for j in range(0,3)],
@@ -239,14 +232,11 @@ class NegGui:
                                vertical_scroll_only=False,
                                k='-TABLA_V-')]]
 
-
         F_3=[[sg.Input(size=(15,0),font='18',k='-buscar_v-'),sg.Button('BUSCAR',size=(15,0),k='-BUSCAR_V-')],
              [sg.Text('NOMBRE',font='20'),sg.Input(size=(30,0),font='18',k='-n_v-')],
              [sg.Text('COMPRA TOTAL BS',font='20'),sg.Input(size=(30,0),justification='right',font='24',k='-ctbs_v-')],
              [sg.Text('COMPRA TOTAL $   ',font='20'),sg.Input(size=(30,0,),justification='right',font='24',k='-ct$_v-')],
              [sg.Button('DOCUMENTAR',size=(15,0),k='-D_V-'),sg.Button('ELIMINAR',size=(15,0),k='-E_V-')]]
-
-
 
         f1=sg.Frame('',F_1,  element_justification='center',  vertical_alignment='center',k='-f1_v-')
         f2=sg.Frame('',F_2,  element_justification='center',  vertical_alignment='center' ,k='-f2_v-')
@@ -270,7 +260,6 @@ class NegGui:
 
                 "ey":['-ARBOL-',
                       '-TABLA_V-']}
-
 
     def ver(self):
 
@@ -332,7 +321,6 @@ class NegGui:
             ventana['-ctbs_ini-'].update(self.motor.lista_pedidos()[1])
             ventana['-ct$_ini-'].update(self.motor.lista_pedidos()[2])
 
-
             #////////////////////////////////////////////////////////////////////////////////////////////////////
             #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@----INICIO----@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             #////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -341,28 +329,16 @@ class NegGui:
                     ventana[k].update(button_color=sg.theme_button_color())
                 ventana[evento].update(button_color=('white','red'))
 
-
-
-
             if evento in ('-BUSCAR_INI-','-buscar_ini-enter'):
                 lista_busqueda=[]
                 nombre=ventana['-buscar_ini-'].get()
-
                 for producto in self.motor.lista_nombres_de_productos():
                     if nombre in producto:
                         lista_busqueda.append(producto)
-
                 ventana['-LISTA_INI-'].update(values=lista_busqueda)
-
-
-
-
-
 
             elif evento=='-SELECCIONAR_INI-':
                 nombre=valores['-LISTA_INI-']
-
-
                 try:
                     sql_p=self.motor.ejecutar_sql("SELECT * FROM productos WHERE Nombre_producto='{}'".format(nombre[0]))
 
@@ -389,12 +365,6 @@ class NegGui:
 
                 except:
                     self.ventanaMensaje.ver("seleccione de la lista")
-
-
-
-
-
-
 
             elif evento in ('-BsM_INI-','-BsD_INI-'):
                 nombre = valores['-p_ini-']
@@ -436,17 +406,9 @@ class NegGui:
                 ventana['-ptbs_ini-'].update(self.motor.coma(calculo,2))
                 ventana['-pt$_ini-'].update(self.motor.coma(calculo_d,4 ))
 
-
-
-
-
             elif evento=='-C_INI-':
                 print("cancelar")
                 self.motor.pedido(ventana,['producto','0,00','0,00','...','1','0,00','0,00','0,00','0,00'])
-
-
-
-
 
             elif evento=='-LL_INI-':
 
@@ -466,9 +428,7 @@ class NegGui:
 
 
                 if valores['-p_ini-']!='producto':
-
                     try:
-
                         self.motor.ejecutar_sql("INSERT INTO pedidos VALUES (?,?,?,?,?,?,?,?)",lista_pedido)
 
 
@@ -482,20 +442,11 @@ class NegGui:
 
                     self.motor.pedido(ventana,['producto','0,00','0,00','...','1','0,00','0,0000','0,00','0,00'])
 
-
-
-
-
             elif evento=='-CAMBIAR_DOLAR_INI-':
                 pd=ventana['-dolar_ini-'].get()
 
                 self.ventanaDolar.ver()
                 ventana['-dolar_ini-'].update(self.motor.valor_dolar())
-
-
-
-
-
 
             elif evento=='-CANCELAR_INI-':
                 try:
@@ -511,30 +462,18 @@ class NegGui:
                 except:
                     self.ventanaMensaje.ver("error al cancelar")
 
-
-
-
-
-
             elif evento=='-ELIMINAR_INI-':
                 try:
                     nombre=ventana['-TABLA_INI-'].get()[valores['-TABLA_INI-'][0]][0]
-
                     self.motor.ejecutar_sql("DELETE FROM pedidos WHERE n_p='{}'".format(nombre))
-
                     ventana['-TABLA_INI-'].update(self.motor.lista_pedidos()[0])
 
                 except:
                     self.ventanaMensaje.ver("error al borrar")
 
-
-
-
-
-
             elif evento=='-GUARDAR_INI-':
-                pass
-
+                self.ventanaMensaje.ver(self.ventas.fecha())
+                self.ventas.guardar_venta()
             #////////////////////////////////////////////////////////////////////////////////////////////////////
             #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@----INVENTARIO----@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             #////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -549,11 +488,6 @@ class NegGui:
 
                 ventana['-TABLA_INV-'].update(values=lista_busqueda)
 
-
-
-
-
-
             elif evento=='-SELECCIONAR_INV-':
                 if len(valores['-TABLA_INV-']):
                     producto=ventana['-TABLA_INV-'].get()[valores['-TABLA_INV-'][0]]
@@ -562,11 +496,6 @@ class NegGui:
 
                 else:
                     self.ventanaMensaje.ver("seleccione un producto")
-
-
-
-
-
 
             elif evento=='-ELIMINAR_INV-':
                 if len(valores['-TABLA_INV-']):
@@ -589,22 +518,12 @@ class NegGui:
                 else:
                     self.ventanaMensaje.ver("seleccione un producto")
 
-
-
-
-
             elif evento=='-ACTUALIZAR_INV-':
                 numero=valores['-actualizar_inv-']
                 if len(numero):
                     numero=self.motor.punto(numero)
                     ventana['-cantidad_inv-'].update(value=self.motor.coma(float(numero),2))
                     ventana['-actualizar_inv-'].update("")
-
-
-
-
-
-
 
             elif evento=='-RECARGAR_INV-':
                 numero_r=valores['-recargar_inv-']
@@ -619,17 +538,10 @@ class NegGui:
                     else:
                         self.ventanaMensaje.ver("cantidad excedida")
 
-
-
-
-
-
             elif evento=='-APLICAR_INV-':
                 nombre=ventana['-nombre_inv-'].get()
-
                 cantidad=float(self.motor.punto(valores['-cantidad_inv-']))
                 total=float(self.motor.punto(valores['-total_inv-']))
-
                 if total<=cantidad:
                     try:
                         self.motor.ejecutar_sql("""UPDATE Inventario SET
@@ -701,14 +613,8 @@ class NegGui:
                 else:
                     self.ventanaMensaje.ver("seleccione un producto")
 
-
-
-
-
-
             elif evento=='-EDITAR_C-':
                 if len(valores['-TABLA_C-']):
-
                     producto=ventana['-TABLA_C-'].get()[valores['-TABLA_C-'][0]]
                     self.ventanaEditar.ver(producto)
                     ventana['-TABLA_C-'].update(values=self.motor.lista_de_productos())
@@ -726,11 +632,6 @@ class NegGui:
                 else:
                     self.ventanaMensaje.ver("seleccione un producto")
 
-
-
-
-
-
             elif evento in ('-BUSCAR_C-', '-busqueda_c-enter'):
                 lista_busqueda=[]
                 nombre=ventana['-busqueda_c-'].get()
@@ -743,11 +644,6 @@ class NegGui:
                             lista_busqueda.append(producto)
 
                 ventana['-TABLA_C-'].update(values=lista_busqueda)
-
-
-
-
-
 
             elif evento=='-INVENTARIO_C-':
                 if len(valores['-TABLA_C-']):
@@ -786,6 +682,5 @@ class NegGui:
 
 
         ventana.close()
-
 
 NegGui().ver()

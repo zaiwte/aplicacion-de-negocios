@@ -2,12 +2,12 @@ import sqlite3
 import sys,random,time
 import os
 import locale
+import datetime
 import PySimpleGUI as sg
 
 class NegMotor:
     def __init__(self):
         self.nombre_BDD="BD1"
-
 
     def editar_inventario(self,ventana,ip):
         """nombre producto
@@ -24,7 +24,6 @@ class NegMotor:
 
         for i in l:
             ventana[i[0]].update(i[1])
-
 
     def pedido(self,ventana,prod):
         """nombre producto
@@ -51,8 +50,6 @@ class NegMotor:
            ('-ti_ini-',    prod[8])]
         for i in p:
             ventana[i[0]].update(i[1])
-
-
 
     def valor_dolar(self):
         pd="0,00"
@@ -120,7 +117,6 @@ class NegMotor:
             ventana[i].expand(expand_x = ex,expand_y =ey,expand_row =er)
 
     def validar_numero(self,ventana,valores,evento,lista):
-
         for h in lista:
             ventana[h].bind("<Button-1>","B1")
             ventana[h].bind("<Button-2>","B2")
@@ -241,22 +237,22 @@ class Ventana_busqueda:
                                justification='left',
                                font=['20'],
                                auto_size_columns=False,
-                               def_col_width=12,
-                               num_rows=14,
+                               def_col_width=10,
+                               num_rows=12,
                                vertical_scroll_only=False,
                                k='-TABLA-')]]
 
-        F_2=[[sg.Text('NOTA',font='20'),sg.Input(size=(26+20,0),font='18',k='-nota-')],
-             [sg.Text('DOLAR',font='20'),sg.Input(size=(26+20,0),justification='right',font='24',k='-dolar-')],
-             [sg.Text('HORA',font='20'),sg.Input(size=(26+20,0),justification='right',font='24',k='-hora-')],
-             [sg.Text('COMPRA TOTAL BS',font='20'),sg.Input(size=(26+20,0),justification='right',font='24',k='-ctbs-')],
-             [sg.Text('COMPRA TOTAL $   ',font='20'),sg.Input(size=(26+20,0,),justification='right',font='24',k='-ct$-')],
-             [sg.Button('DOCUMENTAR',size=(36+20,0),k='-D-')]]
+        F_2=[[sg.Text('NOTA',font='20'),sg.Input(size=(60,0),font='18',k='-nota-')],
+             [sg.Text('DOLAR',font='20'),sg.Input(size=(60,0),justification='right',font='24',k='-dolar-')],
+             [sg.Text('HORA',font='20'),sg.Input(size=(60,0),justification='right',font='24',k='-hora-')],
+             [sg.Text('COMPRA TOTAL BS',font='20'),sg.Input(size=(60,0),justification='right',font='24',k='-ctbs-')],
+             [sg.Text('COMPRA TOTAL $',font='20'),sg.Input(size=(60,0,),justification='right',font='24',k='-ct$-')],
+             [sg.Button('DOCUMENTAR',size=(66,0),k='-D-')]]
 
         f1=sg.Frame('',F_1,  element_justification='center',  vertical_alignment='center',k='-f1-')
         f2=sg.Frame('',F_2,  element_justification='center',  vertical_alignment='center',k='-f2-')
-
-        dise=[[f1],[f2]]
+        fa=sg.Frame('',[[f1],[f2]],  element_justification='center',  vertical_alignment='center',k='-fa-')
+        dise=[[fa]]
 
 
         ventanaBuscar=sg.Window(self.titulo, dise, element_justification='center',finalize=True)
@@ -269,12 +265,14 @@ class Ventana_busqueda:
 
             #NegMotor().expandir(ventanaBuscar,['-f2-'])
 
-            NegMotor().expandir(ventanaBuscar,['-nota-',
+            NegMotor().expandir(ventanaBuscar,['-f2-',
+                                               '-nota-',
                                                '-dolar-',
                                                '-hora-',
                                                '-ctbs-',
                                                '-ct$-',
-                                               '-D-'],ey=False)
+                                               '-D-',
+                                               ],ey=False)
 
             if evento=='-D-':
                 ventanaBuscar.close()
@@ -485,3 +483,36 @@ class Ventana_registro:
 
         ventanaRegistro.close()
         return validado
+
+class Ventas(NegMotor):
+    def __init__(self):
+        self.nombre_BDD:str = "ventas/A_2021/mes_05/bddv"
+
+    def fecha(self):
+        dias_semana = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
+        ahora =datetime.datetime.now()
+        dia = ahora.weekday()
+        return (dias_semana[dia],ahora.day,ahora.month,ahora.year)
+
+    def carpeta(self):
+
+        try:
+            os.makedirs('ventas/2021/mes_05')
+        except:
+            pass
+
+    def crear_tablas_sql(self):
+        tablas = [
+            "create table compra (n_p varchar(50) unique, p_m real, p_d real, c_p real, pt_bs real, pt_d real, e_p varchar(50),t_inv real)"
+
+
+                 ]
+        for i in tablas:
+            try:
+                self.ejecutar_sql(i)
+            except:
+                print("tabla ya creada")
+
+    def guardar_venta(self):
+        self.crear_tablas_sql()
+
