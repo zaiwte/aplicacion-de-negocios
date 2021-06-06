@@ -244,7 +244,6 @@ class Ventana_busqueda:
 
         F_2=[[sg.Text('NOTA',font='20'),sg.Input(size=(60,0),font='18',k='-nota-')],
              [sg.Text('DOLAR',font='20'),sg.Input(size=(60,0),justification='right',font='24',k='-dolar-')],
-             [sg.Text('HORA',font='20'),sg.Input(size=(60,0),justification='right',font='24',k='-hora-')],
              [sg.Text('COMPRA TOTAL BS',font='20'),sg.Input(size=(60,0),justification='right',font='24',k='-ctbs-')],
              [sg.Text('COMPRA TOTAL $',font='20'),sg.Input(size=(60,0,),justification='right',font='24',k='-ct$-')],
              [sg.Button('DOCUMENTAR',size=(66,0),k='-D-')]]
@@ -268,7 +267,6 @@ class Ventana_busqueda:
             NegMotor().expandir(ventanaBuscar,['-f2-',
                                                '-nota-',
                                                '-dolar-',
-                                               '-hora-',
                                                '-ctbs-',
                                                '-ct$-',
                                                '-D-',
@@ -388,7 +386,6 @@ class Ventana_registro:
         self.titulo=titulo
 
     def ver(self):
-
         disen=[[sg.Text('NOMBRE',font='20'),sg.Input(justification='left',font='18',key='-nombre-')],
              [sg.Text('P.MAYOR',font='20'),sg.Input(justification='left',font='18',key='-p_mayor-',enable_events=True)],
              [sg.Text('P.DETAL',font='20'),sg.Input(justification='left',font='18',key='-p_detal-',enable_events=True)],
@@ -486,7 +483,8 @@ class Ventana_registro:
 
 class Ventas(NegMotor):
     def __init__(self):
-        self.nombre_BDD:str = "ventas/A_2021/mes_05/bddv"
+        self.nombre_BDD:str
+        self.numero:int = 0
 
     def fecha(self):
         dias_semana = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
@@ -494,25 +492,70 @@ class Ventas(NegMotor):
         dia = ahora.weekday()
         return (dias_semana[dia],ahora.day,ahora.month,ahora.year)
 
-    def carpeta(self):
+    def contador(self):
+        self.numero+=1
 
+        instrucciones = ["DELETE FROM pedidos",
+                       "INSERT INTO nop VALUES (?,)",
+                       "SELECT * FROM pedidos"]
+        for i in instrucciones:
+            try:
+                self.motor.ejecutar_sql(i,)
+            except:
+                print()
         try:
-            os.makedirs('ventas/2021/mes_05')
+            self.motor.ejecutar_sql("DELETE FROM pedidos")
         except:
-            pass
+            print("error delete nop")
+        try:
+            self.ejecutar_sql("INSERT INTO nop VALUES (?,)",(self.numero,))
+        except:
+            print("error insert nop")
+        try:
+            self.motor.ejecutar_sql("SELECT * FROM pedidos")
+        except:
+            print("error select nop")
+
+        return self.numero
+
+    def carpeta(self,nombreCarpeta:str) -> str:
+        try:
+            os.mkdir(nombreCarpeta)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                print("la carpeta ya existe")
+
+        return nombreCarpeta
 
     def crear_tablas_sql(self):
         tablas = [
-            "create table compra (n_p varchar(50) unique, p_m real, p_d real, c_p real, pt_bs real, pt_d real, e_p varchar(50),t_inv real)"
-
-
+            ("compra","create table compra (nop real, n_p varchar(50) unique, p_m real, p_d real, c_p real, pt_bs real, pt_d real, e_p varchar(50))")
+            ("factura","create table factura (nop real unique, dlh real, nota varchar(80), ctbs real, ctdl real)")
+            ("nop","create table nop(numero int unique)")
                  ]
         for i in tablas:
             try:
-                self.ejecutar_sql(i)
+                self.ejecutar_sql(i[1])
             except:
-                print("tabla ya creada")
+                print(f"tabla {i[0]} ya creada")
 
-    def guardar_venta(self):
-        self.crear_tablas_sql()
+    def guardar_venta(self,venta:dict):
+        #self.nombre_BDD = self.carpeta("ventas") + "/" + [f"{semana}_{dia}_{mes}_{A}" for semana,dia,mes,A in (self.fecha(),)][0]
+        #self.crear_tablas_sql()
+        self.numero
+        nop = self.ejecutar_sql("SELECT * FROM nop)")[0][0]
+
+        try:
+            pass
+            #self.ejecutar_sql("INSERT INTO nop VALUES (?,)",(,))
+        except:
+            print("error en nop sql")
+
+        instruccion = { "c":["INSERT INTO compra VALUES (?,?,?,?,?,?,?,?)",venta["c"]],
+                        "f":["INSERT INTO factura VALUES (?,?,?,?,?)",venta["f"]],
+                        "nop":"INSERT INTO nop VALUES (?,)"}
+        try:
+            self.ejecutar_sql(comando[llave],parametro)
+        except:
+            print("error sql")
 

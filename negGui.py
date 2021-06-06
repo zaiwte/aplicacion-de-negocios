@@ -222,12 +222,12 @@ class NegGui:
              [sg.Button('SELECCIONAR',size=(15,0),k='-SELECCIONAR_V-')],
              [sg.Button('ELIMINAR',size=(15,0),k='-ELIMINAR_V-')]]
 
-        F_2=[[sg.Table(headings=[i for i in ['PRODUCTO','P. AL MAYOR','P. AL DETAL','CANTIDAD','TOTAL BS','TOTAL $','ETIQUETA']],
-                               values=[[i for i in ['','','','','','','']] for j in range(0,3)],
+        F_2=[[sg.Table(headings=[i for i in ['NOP','Dolar','Nota','Compra Total Bs','Compra Total $']],
+                               values=[[i for i in ['','','','','']] for j in range(0,3)],
                                justification='left',
                                font=['20'],
                                auto_size_columns=False,
-                               def_col_width=12,
+                               def_col_width=18,
                                num_rows=14,
                                vertical_scroll_only=False,
                                k='-TABLA_V-')]]
@@ -292,7 +292,6 @@ class NegGui:
                 break
 
             self.motor.validar_numero(ventana,valores,evento,['-actualizar_inv-','-recargar_inv-','-c_ini-'])
-
             self.motor.expandir(ventana,['TAB'])
 
             self.motor.expandir(ventana,self.tab_inicio()["frames"])
@@ -341,7 +340,6 @@ class NegGui:
                 nombre=valores['-LISTA_INI-']
                 try:
                     sql_p=self.motor.ejecutar_sql("SELECT * FROM productos WHERE Nombre_producto='{}'".format(nombre[0]))
-
                     np=sql_p[0][0]
                     pm=self.motor.coma(sql_p[0][1],2)
                     pd=self.motor.coma(sql_p[0][2],2)
@@ -349,17 +347,15 @@ class NegGui:
                     c ='1'
                     ptbs='0,00'
                     ptd ='0,0000'
-                    ci ='0,00'
-                    ti ='0,00'
 
                     try:
                         sql_i=self.motor.ejecutar_sql("SELECT * FROM Inventario WHERE N_producto='{}'".format(nombre[0]))
-
                         ci=self.motor.coma(sql_i[0][1],2)
                         ti=self.motor.coma(sql_i[0][2],2)
 
                     except:
-                        pass
+                        ci = "Nada"
+                        ti = "Nada"
 
                     self.motor.pedido(ventana,[np,pm,pd,e,c,ptbs,ptd,ci,ti])
 
@@ -368,41 +364,38 @@ class NegGui:
 
             elif evento in ('-BsM_INI-','-BsD_INI-'):
                 nombre = valores['-p_ini-']
-                ti="0,00"
-                try:
-                    sql_i=self.motor.ejecutar_sql("SELECT * FROM Inventario WHERE N_producto='{}'".format(nombre))
-                    ti=self.motor.coma(sql_i[0][2],2)
 
+                try:
+                    sql_i = self.motor.ejecutar_sql("SELECT * FROM Inventario WHERE N_producto='{}'".format(nombre))
+                    ti = self.motor.coma(sql_i[0][2],2)
                 except:
-                    print("pass")
-                    pass
+                    ti = "Nada"
 
                 c=ventana['-c_ini-'].get()
                 p=ventana[BP[evento][0]].get()
                 vd=self.motor.valor_dolar()
-
-                #asignado(BP[evento][1])
                 p_elegido=BP[evento][1]
 
                 if not len(c):
                     c=1
                     ventana['-c_ini-'].update("1")
-
-                calculo  =float(self.motor.punto(p))*float(self.motor.punto(c))
+                calculo = float(self.motor.punto(p))*float(self.motor.punto(c))
 
                 try:
                     calculo_d=calculo/float(self.motor.punto(vd))
-
                 except:
                     calculo_d=0
 
-                calculo_t=0
-                if not float(self.motor.punto(ti))==0:
-                    calculo_t=float(self.motor.punto(ti))-float(self.motor.punto(c))
+                if not ti in ("0,00","Nada") :
+                    calculo_t = float(self.motor.punto(ti)) - float(self.motor.punto(c))
                     if calculo_t<0:
                         self.ventanaMensaje.ver("total de inventario excedido")
+                    else:
+                        calculo_t = self.motor.coma(calculo_t,2)
+                else:
+                    calculo_t = ti
 
-                ventana['-ti_ini-'].update(self.motor.coma(calculo_t,2))
+                ventana['-ti_ini-'].update(calculo_t)
                 ventana['-ptbs_ini-'].update(self.motor.coma(calculo,2))
                 ventana['-pt$_ini-'].update(self.motor.coma(calculo_d,4 ))
 
@@ -411,9 +404,7 @@ class NegGui:
                 self.motor.pedido(ventana,['producto','0,00','0,00','...','1','0,00','0,00','0,00','0,00'])
 
             elif evento=='-LL_INI-':
-
                 #'-TABLA_INI-'
-
                 lista_pedido=(ventana['-p_ini-'].get(),
                               float(self.motor.punto(p_elegido[0])),
                               float(self.motor.punto(p_elegido[1])),
@@ -421,25 +412,18 @@ class NegGui:
                               float(self.motor.punto(ventana['-ptbs_ini-'].get())),
                               float(self.motor.punto(ventana['-pt$_ini-'].get())),
                               ventana['-e_ini-'].get(),
-                              float(self.motor.punto(ventana['-ti_ini-'].get())))
-
+                              ventana['-ti_ini-'].get())
                 #('-ci_ini-'  ),
                 #('-ti_ini-'  )
-
-
                 if valores['-p_ini-']!='producto':
                     try:
                         self.motor.ejecutar_sql("INSERT INTO pedidos VALUES (?,?,?,?,?,?,?,?)",lista_pedido)
-
-
                         #ventana['-ctbs_ini-'].update(self.motor.lista_pedidos()[1])
                         #ventana['-ct$_ini-'].update(self.motor.lista_pedidos()[2])
-
                     except:
                         self.ventanaMensaje.ver("error al llevar")
 
                     ventana['-TABLA_INI-'].update(self.motor.lista_pedidos()[0])
-
                     self.motor.pedido(ventana,['producto','0,00','0,00','...','1','0,00','0,0000','0,00','0,00'])
 
             elif evento=='-CAMBIAR_DOLAR_INI-':
@@ -451,11 +435,8 @@ class NegGui:
             elif evento=='-CANCELAR_INI-':
                 try:
                     self.motor.ejecutar_sql("DELETE FROM pedidos")
-
                     ventana['-TABLA_INI-'].update(self.motor.lista_pedidos()[0])
-
                     self.motor.pedido(ventana,['producto','0,00','0,00','...','1','0,00','0,0000','0,00','0,00'])
-
                     ventana['-ctbs_ini-'].update("0,00")
                     ventana['-ct$_ini-'].update("0,0000")
 
@@ -472,8 +453,34 @@ class NegGui:
                     self.ventanaMensaje.ver("error al borrar")
 
             elif evento=='-GUARDAR_INI-':
-                self.ventanaMensaje.ver(self.ventas.fecha())
-                self.ventas.guardar_venta()
+                nombres=[p[0] for p in ventana['-TABLA_INI-'].get()]
+                inventario_total_productos = [[nombre, self.motor.ejecutar_sql(f"SELECT t_inv FROM pedidos WHERE n_p='{nombre}'")[0]] for nombre in nombres]
+                filtrado_productos = list(filter(lambda n : 'Nada' not in n[1],inventario_total_productos))
+                #self.ventanaMensaje.ver(self.ventas.guardar_venta())
+                #self.ventanaMensaje.ver(filtrado_productos)
+
+                for nombre,total in filtrado_productos:
+                    #self.motor.ejecutar_sql(f"UPDATE Inventario SET Total = {total[0]} WHERE N_producto = '{nombre}'")
+                    pass
+                f = ['-dolar_ini-',
+                     '-nota_ini-',
+                     '-ctbs_ini-',
+                     '-ct$_ini-']
+                datos_factura =[valores[d] for d in f]
+                datos_compra = self.motor.ejecutar_sql("SELECT * FROM pedidos")
+                #self.ventas.guardar_venta({"f":datos_factura,"c":datos_compra})
+                #self.ventanaMensaje.ver(self.motor.ejecutar_sql("SELECT * FROM pedidos"))
+                self.ventanaMensaje.ver(self.ventas.contador())
+                """try:
+                    self.motor.ejecutar_sql("DELETE FROM pedidos")
+                    ventana['-TABLA_INI-'].update(self.motor.lista_pedidos()[0])
+                    self.motor.pedido(ventana,['producto','0,00','0,00','...','1','0,00','0,0000','0,00','0,00'])
+                    ventana['-ctbs_ini-'].update("0,00")
+                    ventana['-ct$_ini-'].update("0,0000")
+
+                except:
+                    self.ventanaMensaje.ver("error al cancelar")"""
+
             #////////////////////////////////////////////////////////////////////////////////////////////////////
             #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@----INVENTARIO----@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             #////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -552,18 +559,12 @@ class NegGui:
                                                                                                   nombre))
 
                         self.motor.ejecutar_sql("DELETE FROM pedidos")
-
                         ventana['-TABLA_INI-'].update(self.motor.lista_pedidos()[0])
-
                         ventana['-TABLA_INV-'].update(values=self.motor.lista_de_inventario())
-
                     except:
                         self.ventanaMensaje.ver("error al aplicar")
-
                     self.motor.editar_inventario(ventana,['producto','','','0','0'])
-
                     self.motor.pedido(ventana,['producto','0,00','0,00','...','1','0,00','0,00','0,00','0,00'])
-
                 else:
                     self.ventanaMensaje.ver("cantidad excedida")
 
